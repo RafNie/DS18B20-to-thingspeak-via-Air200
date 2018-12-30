@@ -1,3 +1,14 @@
+/*
+ * config.h
+ *
+ *  Created on: 24 gru 2018
+ *      Author: rafal
+ *
+ *  Description:
+ *  Simple ATtiny module for transfer DS28B20 temperature to thingspeak.com via Air200t
+ *
+ */
+
 #include <avr/io.h>
 #include <stdlib.h>
 #include <util/delay.h>
@@ -10,7 +21,7 @@
 #include "ds18b20/ds18b20.h"
 #include "USI_serial_tx.h"
 
-int temperature = 0;
+int gTemperature = 0;
 
 ISR(WDT_vect)
 {
@@ -27,20 +38,27 @@ void _delay_s(uint16_t sec)
 	}
 }
 
-void sleep_cpu_minutes(const uint16_t minutes)
+void sleep_cpu_minutes(uint16_t minutes)
 {
+	if (0 != minutes)
+	{
+		//decrease by one minute, the total delay in the main loop lasts about a minute
+		minutes -= 1;
+	}
+
 	PORTB &= ~(1<<PB0); // turn off Air200
+
 	cli();
 	MCUSR = 0;
 	WDTCR = (1<<WDCE) | (1<<WDE);
 	WDTCR = (1<<WDIE) | WDTO_2S; // enable watchdog interrupt instead of reset
 	sei();
-	const uint32_t max_intervals = 30 * minutes;
-	uint32_t sleep_intervals = 0;
-	while (sleep_intervals < max_intervals)
+
+	uint32_t max_intervals = 30 * minutes;
+	while (max_intervals > 0)
 	{
 		sleep_mode();
-		sleep_intervals++;
+		--max_intervals;
 	}
 
 	cli();
@@ -52,14 +70,14 @@ void sleep_cpu_minutes(const uint16_t minutes)
 
 int main(void)
 {
-	set_sleep_mode(SLEEP_MODE_PWR_DOWN); // sleep mode: Power-down
+	set_sleep_mode(SLEEP_MODE_PWR_DOWN); // set sleep mode: Power-down
 	sei();
 
 	PORTB |= 1 << PB1; // setup serial output
 	DDRB  |= (1<<PB1);
 
 	DDRB |= (1<<PB0); // set PB0 as output
-	PORTB &= ~(1<<PB0); // write 0 to PB0
+	PORTB &= ~(1<<PB0);
 	_delay_s(2);
 	PORTB |= (1<<PB0); // write 1 to PB0 - turn on Air200
 
@@ -67,15 +85,15 @@ int main(void)
 	{
 		ds18b20convert( &PORTB, &DDRB, &PINB, ( 1 << PB2 ), NULL );
 		_delay_s(1);
-		if (ds18b20read( &PORTB, &DDRB, &PINB, ( 1 << PB2 ), NULL, &temperature ))
+		if (ds18b20read( &PORTB, &DDRB, &PINB, ( 1 << PB2 ), NULL, &gTemperature ))
 		{
 			_delay_s(10);
 			break; // break if read fail - don't send nothing via http
 		}
 
-		_delay_s(35); // wait for Air200 full initialization
+		_delay_s(35); // wait for Air200 full initialization and network attachment
 		sendStringP(cInit);
-		_delay_s(2);
+		_delay_s(3);
 		sendStringP(cApn);
 		_delay_s(5);
 		sendStringP(cConnect);
@@ -85,10 +103,10 @@ int main(void)
 		sendStringP(cHttpGetBegin);
 
 		char buffer[10];
-		itoa(temperature/16, buffer, 10);
+		itoa(gTemperature/16, buffer, 10);
 		sendString(buffer);
 		sendString(".");
-		itoa(((temperature%16)*1000)/16, buffer, 10);
+		itoa(((gTemperature%16)*1000)/16, buffer, 10);
 		sendString(buffer);
 
 		sendStringP(cHttpGetEnd);
