@@ -1,4 +1,4 @@
-# DS28B20 thingspeak GPRS sender 
+# DS18B20 thingspeak GPRS sender 
 
 Project of simple adapter designed for sending data from DS18B20 temperature sensor to thingspeak service using Air200t GPRS module.
 The device obtains temperature data from DS18B20 sensor and sends value to the thingspeak channel. Process is repeated in infinite loop.
