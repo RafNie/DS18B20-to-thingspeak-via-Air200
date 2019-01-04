@@ -2,10 +2,10 @@
  * config.h
  *
  *  Created on: 24 gru 2018
- *      Author: rafal
+ *      Author: Rafal Niedzwiedzinski
  *
  *  Description:
- *  Simple ATtiny module for transfer DS28B20 temperature to thingspeak.com via Air200t
+ *  Simple ATtiny module for transfer DS18B20 temperature to thingspeak.com via Air200t
  *
  */
 
@@ -46,8 +46,6 @@ void sleep_cpu_minutes(uint16_t minutes)
 		minutes -= 1;
 	}
 
-	PORTB &= ~(1<<PB0); // turn off Air200
-
 	cli();
 	MCUSR = 0;
 	WDTCR = (1<<WDCE) | (1<<WDE);
@@ -64,8 +62,6 @@ void sleep_cpu_minutes(uint16_t minutes)
 	cli();
 	WDTCR = 0; // disable watchdog
 	sei();
-
-	PORTB |= (1<<PB0); // turn on Air200
 }
 
 int main(void)
@@ -73,16 +69,18 @@ int main(void)
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN); // set sleep mode: Power-down
 	sei();
 
-	PORTB |= 1 << PB1; // setup serial output
-	DDRB  |= (1<<PB1);
+	DDRB  |= (1<<PB1);  // setup serial output
+	PORTB |= (1<<PB1);
+
 
 	DDRB |= (1<<PB0); // set PB0 as output
 	PORTB &= ~(1<<PB0);
 	_delay_s(2);
-	PORTB |= (1<<PB0); // write 1 to PB0 - turn on Air200
 
 	while(1)
 	{
+		PORTB |= (1<<PB0); // turn on Air200
+
 		ds18b20convert( &PORTB, &DDRB, &PINB, ( 1 << PB2 ), NULL );
 		_delay_s(1);
 		if (ds18b20read( &PORTB, &DDRB, &PINB, ( 1 << PB2 ), NULL, &gTemperature ))
@@ -112,6 +110,7 @@ int main(void)
 		sendStringP(cHttpGetEnd);
 		_delay_s(10);
 
+		PORTB &= ~(1<<PB0); // turn off Air200
 		sleep_cpu_minutes(SENDING_INTERVAL);
 	}
 

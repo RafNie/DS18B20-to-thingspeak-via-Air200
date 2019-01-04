@@ -1,7 +1,7 @@
 # DS18B20 thingspeak GPRS sender 
 
 Project of simple adapter designed for sending data from DS18B20 temperature sensor to thingspeak service using Air200t GPRS module.
-The device obtains temperature data from DS18B20 sensor and sends value to the thingspeak channel. Process is repeated in infinite loop.
+The ATTiny obtains temperature data from DS18B20 sensor, prepare TCP session with thingspeak server via serial at the GPRS module and sends temperature value. All with use AT commands. Process is repeated in infinite loop.
 
 
 ## Hardware
@@ -35,9 +35,15 @@ There is need to set thingspeak channel and gprs connection parameters (APN) in 
 Serial baud rate is defined on 19200 bps. Change baud rate in GPRS module before use by AT command:
 `AT+IPR=19200`
 
+Fuses:
+efuse: FF
+hfuse: DF
+lfuse: ED
+
 #### TODOs
 
-Adding support for next temperature sensors - planed in next commits.
+1. Ucc measurment for battery/solar powering.
+2. Adding support for next temperature sensors
 
 #### Used external projects
 
