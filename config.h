@@ -12,17 +12,22 @@
  * User configuration:
 */
 
-// Sending interval in minutes - max 65535
-#define SENDING_INTERVAL 20
+// Sending interval in minutes max 65535
+#define SENDING_INTERVAL 19
 
 // GPRS config
-#define APN "your apn"
+#define APN "apn"
 #define APN_USER ""
 #define APN_PWD ""
 
 // Thinkspeak config
-#define API_KEY "your key"
-#define FIELD "field number"
+#define API_KEY "key"
+#define FIELD_TEMPERATURE_1 "1"
+#define FIELD_VOLTAGE "2"
+
+// Accumulator config
+// Minimum value of LiIon accumulator voltage which is needed for communication via GPRS module
+#define MIN_VOLT_VAL 3100 // mV
 
 // CPU config
 //#define F_CPU 7372800
