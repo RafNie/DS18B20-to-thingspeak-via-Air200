@@ -21,7 +21,7 @@
 #include "ds18b20/ds18b20.h"
 #include "USI_serial_tx.h"
 
-int gTemperature = 0;
+int16_t gTemperature = 0;
 
 ISR(WDT_vect)
 {
@@ -72,13 +72,50 @@ uint16_t get_Ucc_val_when_ready()
 {
 	while (ADCSRA & (1<<ADSC)){} // wait for conversion
 	uint16_t result = ADC;
-	result = 1082400 / result; // Theoretical factor is 1126400 = 1.1V*1024*1000
-	// Factor based on measured voltage is 1082400
 	/*
+	 * Theoretical factor is 1126400 = 1.1V*1024*1000
+	 * Vbg (1.1V) can be inaccurate
+	 * Calculate real factor:
+	 * Real measured Ucc / Ucc measured by AVR ADC calculated with 1126400 = correction factor
+	 * example:
 	 * 4.92 / 5,12 = 0,9609375
-	 * 1126400 * 9609375 = 1082400
+	 * 1126400 * 0,9609375 = 1082400
+	 * Factor based on measured voltage is 1082400
 	 */
+	result = 1082400 / result;
 	return result; // Ucc in millivolts
+}
+
+void convert_integer_part(int16_t temperature, char * string)
+{
+	   if (temperature & 0x8000) // check sign bit
+	   {
+		  *string = '-'; // it is necessary to manually print sign due to temperatures between -1 and 1
+	      temperature = ~temperature + 1 ;
+	   }
+	   else
+	   {
+		   *string = '+';
+	   }
+	   itoa(temperature>>4, string+1, 10);
+}
+
+void convert_fractional_part(int16_t temperature, char * string)
+{
+	   if (temperature & 0x8000) // check sign bit
+	   {
+	      temperature = ~temperature + 1 ;
+	   }
+	   temperature = (temperature & 0x000F) * 625;
+	   if (temperature <= 625)
+	   {
+		   *string = '0';
+		   itoa((temperature & 0x000F) * 625, string+1, 10);
+	   }
+	   else
+	   {
+		   itoa((temperature & 0x000F) * 625, string, 10);
+	   }
 }
 
 int main(void)
@@ -129,10 +166,10 @@ int main(void)
 		sendStringP(cHttpGetBegin);
 
 		char buffer[10];
-		itoa(gTemperature/16, buffer, 10);
+		convert_integer_part(gTemperature, buffer);
 		sendString(buffer);
 		sendString(".");
-		itoa(((gTemperature%16)*1000)/16, buffer, 10);
+		convert_fractional_part(gTemperature, buffer);
 		sendString(buffer);
 
 		sendStringP(cVoltage);
