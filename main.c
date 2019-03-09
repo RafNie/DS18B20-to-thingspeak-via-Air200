@@ -76,13 +76,13 @@ uint16_t get_Ucc_val_when_ready()
 	 * Theoretical factor is 1126400 = 1.1V*1024*1000
 	 * Vbg (1.1V) can be inaccurate
 	 * Calculate real factor:
-	 * Real measured Ucc / Ucc measured by AVR ADC calculated with 1126400 = correction factor
+	 * (real measured Ucc) / (Ucc measured by AVR ADC, calculated with 1126400) = correction factor
 	 * example:
-	 * 4.92 / 5,12 = 0,9609375
-	 * 1126400 * 0,9609375 = 1082400
-	 * Factor based on measured voltage is 1082400
+	 * 4.01 / 4.171 = 0,96140014385
+	 * 1126400 * 0,96140014385 = 1082921
+	 * Factor based on measured voltage is 1082921
 	 */
-	result = 1082400 / result;
+	result = 1082921 / result;
 	return result; // Ucc in millivolts
 }
 
@@ -135,11 +135,11 @@ int main(void)
 	{
 		init_single_Ucc_meas();
 		// measure Ucc voltage without load (Air200 is off)
-		while(MIN_VOLT_VAL > get_Ucc_val_when_ready())
+		if(MIN_VOLT_VAL > get_Ucc_val_when_ready())
 		{
 			//sleep and wait for charging battery by solar cell
 			sleep_cpu_minutes(SENDING_INTERVAL);
-			init_single_Ucc_meas();
+			continue;
 		}
 
 		PORTB |= (1<<PB0); // turn on Air200
@@ -150,13 +150,18 @@ int main(void)
 		if (ds18b20read( &PORTB, &DDRB, &PINB, ( 1 << PB2 ), NULL, &gTemperature ))
 		{
 			_delay_s(10);
-			break; // break if read fail - don't send nothing via http
+			continue; // if read fail - don't send nothing via http - try next time
 		}
 
 		// send AT command sequence
-		_delay_s(35); // wait 35s for Air200 full initialization and network attachment
+		_delay_s(1);
 		sendStringP(cInit);
-		_delay_s(2);
+		_delay_s(5);
+		if (PIN_EN)
+		{
+			sendStringP(cPIN);
+		}
+		_delay_s(35); // wait 35s for Air200 full initialization and network attachment
 		sendStringP(cApn);
 		_delay_s(3);
 		sendStringP(cConnect);
@@ -182,7 +187,7 @@ int main(void)
 		sendString(buffer);
 
 		sendStringP(cHttpGetEnd);
-		_delay_s(5);
+		_delay_s(3);
 
 		PORTB &= ~(1<<PB0); // turn off Air200
 		sleep_cpu_minutes(SENDING_INTERVAL);

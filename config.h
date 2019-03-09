@@ -15,6 +15,11 @@
 // Sending interval in minutes max 65535
 #define SENDING_INTERVAL 19
 
+// SIM card config
+// PIN_EN: 1 - PIN control enabled, 0 - PIN control disabled
+#define PIN_EN 1
+#define PIN "1234"
+
 // GPRS config
 #define APN "your apn"
 #define APN_USER ""

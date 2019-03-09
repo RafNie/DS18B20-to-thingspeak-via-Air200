@@ -12,6 +12,7 @@
 #include "config.h"
 
 const char cInit[] PROGMEM = "AT+CFUN=1\r";
+const char cPIN[] PROGMEM = "AT+CPIN=\""PIN"\"\r";
 const char cApn[] PROGMEM = "AT+CSTT=\""APN"\",\""APN_USER"\",\""APN_PWD"\"\r";
 const char cConnect[] PROGMEM = "AT+CIPSTART=\"TCP\",\"184.106.153.149\",80\r";
 const char cSend[] PROGMEM = "AT+CIPSEND\r";
