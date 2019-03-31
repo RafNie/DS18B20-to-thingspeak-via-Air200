@@ -22,7 +22,7 @@ There are possible two types of powering:
 
 The Air200t module has the voltage regulator, so it is impossible to power it directly from the LiIon accumulator using Ucc pin. It is necessary to solder an additional power cable to the filtering capacitor, as shown in the picture. The capacitor are connected to output form the voltage regulator. Accepted voltage range here is 3.3V-4.2V. 
 
-<img src="powering.jpg" width="200">
+<img src="powering.jpg" width="400">
 
 
 Universal SO16 to DIP16 adapter PCB was used for mounting all components and connectors. 
@@ -34,7 +34,7 @@ Universal SO16 to DIP16 adapter PCB was used for mounting all components and con
 
 An example of a complete system
 
-<img src="system.jpg" width="200">
+<img src="system.jpg" width="400">
 
 
 ## Software
@@ -54,7 +54,9 @@ Serial baud rate is defined on 19200 bps. Change baud rate in GPRS module before
 
 It is possible to send a PIN code to the SIM card. Configuration is possible in the __config.h__ file.
 
-AVR Fuses:
+
+#### AVR Fuses
+
 efuse: FF
 hfuse: DF
 lfuse: ED
